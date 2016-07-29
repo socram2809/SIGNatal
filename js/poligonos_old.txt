@@ -1,0 +1,17 @@
+//areas de risco polygons
+		var ar_polvector = new Array();
+		var polygonPoints = new Array();
+		var i=0;
+		for(var j=0; j<=75; j++){
+			
+			while(area_risco[i][0]==(j+1)) {
+				polygonPoints[i]= new L.LatLng(area_risco[i][2],area_risco[i][1]);
+				i++;
+				
+			}
+			ar_polvector[j] = new L.Polygon(polygonPoints)
+					.bindPopup("Area de Risco N"+j);
+			map.addLayer(ar_polvector[j]);
+			i=0;
+			
+		}
