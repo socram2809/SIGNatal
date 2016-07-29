@@ -1,0 +1,40 @@
+html, body {
+   height: 100%;
+}
+
+
+.container-fluid {
+    background-color: #2D70DE;
+}
+.navbar{
+	font-family: verdana;
+	font-size: 18px;
+	font-weight: 200;
+	background-color: #363342;
+	top: 0px;
+	width: 100%;
+	position:relative;
+	z-index: 100;
+}
+
+#map {
+    height: 93%;
+	width: 100%;
+	position:absolute;
+}
+.dropdown-menu{
+	width:100%;
+}
+
+span{
+	margin-right: 5px;
+}
+.navbar-nav>li>.dropdown-menu{
+	padding-left:15px;
+}
+label{
+	margin-left:15px;
+}
+.navbar-default .navbar-brand{
+    font-size: xx-large;
+}
