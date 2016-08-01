@@ -1,3 +1,7 @@
+<?php include 'php/conexao.php'; ?>
+
+<?php include 'php/camadas.php'; ?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -44,19 +48,14 @@
 		<li class="dropdown">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-map-marker"></span>Lista de Camadas<span class="caret"></span></a>
           <ul class="dropdown-menu">
-            <li><input type="checkbox" id="esccre" value="esccre" onclick="clicarEscola()"><label for="esccre">Escolas e Creches</label></li>
-			<li><input type="checkbox" id="poligono" value="poligono" onclick="clicarPoligono()"><label for="teste">Polígonos</label></li>
-            <li><input type="checkbox" id="c1" value="layer1" onclick="clicarArea()"><label for="c1">Áreas de Risco</label></li>
-            <li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Praças</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Favelas</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Zona Especial Norte</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Zonas Eleitorais</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Hospitais</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Limite de bairros</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Ruas e Logradouros</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Areas Verdes</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">ZPA</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Feiras Livres</label></li>
+            <?php
+                while($row = pg_fetch_row($camadas)){
+
+                    echo "<li><input type='checkbox' id='$row[0]' "
+                            . "value='$row[3]' onclick='visualizaCamada()'><label for='esccre'>$row[1]</label></li>";
+
+                }
+            ?>
             <li role="separator" class="divider"></li>
             <li><input type="checkbox" id="c3" value="all" ><label for="c3">Todas</label></li>
           </ul>
