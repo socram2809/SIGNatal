@@ -52,7 +52,7 @@
                 while($row = pg_fetch_row($camadas)){
 
                     echo "<li><input type='checkbox' id='$row[0]' "
-                            . "value='$row[3]' onclick='visualizaCamada()'><label for='esccre'>$row[1]</label></li>";
+                            . "value='$row[3]' onclick='visualizaCamada(this)'><label for='esccre'>$row[1]</label></li>";
 
                 }
             ?>

@@ -13,5 +13,7 @@ if (!$camadas = pg_query($conn, $sql)) {
         exit;
 }
 
+pg_close($conn);
+
 ?>
 
