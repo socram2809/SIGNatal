@@ -9,6 +9,8 @@
 include 'conexao.php';
 
 $table = $_GET['tabela'];
+
+$legenda = $_GET['legenda'];
     
 //Transforma campos do array em uma string formatada
 $fieldstr = "";
@@ -32,7 +34,7 @@ while ($row = pg_fetch_row($response)) {
     }
     echo ";";
 }
-echo $table;
+echo $legenda;
 
 pg_close($conn);
 

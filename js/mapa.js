@@ -95,7 +95,8 @@ function visualizaCamada(elemento){
     if(elemento.checked){
         $.ajax("php/carregaDadosCamada.php", {
 		data: {
-			tabela: elemento.value
+			tabela: elemento.value,
+                        legenda: elemento.id
 		},
 		success: function(data){
 			plotaNoMapa(data);
@@ -103,6 +104,14 @@ function visualizaCamada(elemento){
         });
     }else{
         limpaDadosCamada(elemento);
+    }
+}
+
+function selecionaTudo(elemento){
+    checkboxes = document.getElementsByName('camadasDoMapa');
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+        checkboxes[i].checked = elemento.checked;
+        visualizaCamada(checkboxes[i]);
     }
 }
 
@@ -119,7 +128,7 @@ function plotaNoMapa(data){
     var geojson = {
             "type": "FeatureCollection",
             "features": []
-    };   
+    };
 
     //Constroi as features do geojson
     dataArray.forEach(function(d){
@@ -135,22 +144,31 @@ function plotaNoMapa(data){
             geojson.features.push(feature);
     });
     
-    //Transforma os features em editáveis
-    var mapDataLayer = L.geoJson(geojson).addTo(map);
+    var estilo = {
+        "fillColor" : "",
+        "color" : ""
+    };
+    estilo.fillColor = identificador;
+    estilo.color = identificador;
+    
+    var mapDataLayer = L.geoJson(geojson, {style : estilo}).addTo(map);
     
     var objetoCamada = {
-        "layer" : mapDataLayer,
-        "id" : identificador
+        "layer" : "",
+        "id" : ""
     };
+    objetoCamada.layer = mapDataLayer;
+    objetoCamada.id = identificador;
     
     camadasMapa.push(objetoCamada);
 }
 
 function limpaDadosCamada(elemento){
-    var resultado = $.grep(camadasMapa, function(e){ return e.id === elemento.value; });
-    var camadaEscolhida = resultado.layer;
+    var resultado = $.grep(camadasMapa, function(e){ return e.id === elemento.id; });
+    var camadaEscolhida = resultado[0].layer;
     camadaEscolhida.clearLayers();
     map.removeLayer(camadaEscolhida);
+    camadasMapa = camadasMapa.filter(function(e){ return e.id !== elemento.id; });
 }
 
 $(document).ready(construirMapa);

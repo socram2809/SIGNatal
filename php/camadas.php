@@ -6,9 +6,14 @@
  * Curso: Engenharia da Computação
  */
 
-$sql = "SELECT * FROM camada";
+$sql = "SELECT c.*, l.* FROM camada c INNER JOIN legenda l ON c.cor_camada = l.id";
 
 if (!$camadas = pg_query($conn, $sql)) {
+        echo "Ocorreu um erro na query.\n";
+        exit;
+}
+
+if (!$legendas = pg_query($conn, $sql)) {
         echo "Ocorreu um erro na query.\n";
         exit;
 }
