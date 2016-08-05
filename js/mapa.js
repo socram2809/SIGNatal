@@ -110,8 +110,10 @@ function visualizaCamada(elemento){
 function selecionaTudo(elemento){
     checkboxes = document.getElementsByName('camadasDoMapa');
     for(var i=0, n=checkboxes.length;i<n;i++) {
-        checkboxes[i].checked = elemento.checked;
-        visualizaCamada(checkboxes[i]);
+        if(checkboxes[i].checked !== elemento.checked){
+            checkboxes[i].checked = elemento.checked;
+            visualizaCamada(checkboxes[i]);
+        }
     }
 }
 
@@ -129,6 +131,10 @@ function plotaNoMapa(data){
             "type": "FeatureCollection",
             "features": []
     };
+    
+    var isPonto = false;
+    var isPoligono = false;
+    var isLinha = false;
 
     //Constroi as features do geojson
     dataArray.forEach(function(d){
@@ -140,6 +146,14 @@ function plotaNoMapa(data){
                     "properties": {}, //Propriedades
                     "geometry": JSON.parse(d[0]) //Converte geometria
             };
+            
+            if(feature.geometry.type === "MultiPoint"){
+                isPonto = true;
+            }else if(feature.geometry.type === "MultiPolygon"){
+                isPoligono = true;
+            }else if(feature.geometry.type === "MultiLineString"){
+                isLinha = true;
+            }
 
             geojson.features.push(feature);
     });
@@ -151,7 +165,37 @@ function plotaNoMapa(data){
     estilo.fillColor = identificador;
     estilo.color = identificador;
     
-    var mapDataLayer = L.geoJson(geojson, {style : estilo}).addTo(map);
+    var mapDataLayer = null;
+    
+    if(isPonto){
+        mapDataLayer = L.geoJson(geojson, {
+            pointToLayer: function (feature, latlng) {
+                var ponto = L.circleMarker(latlng, estilo);
+                ponto.on({
+                    mousedown: function () {
+                      map.on('mousemove', function (e) {
+                        ponto.setLatLng(e.latlng);
+                      });
+                    }
+                }); 
+                map.on('mouseup',function(e){
+                  map.removeEventListener('mousemove');
+                });
+                return ponto;
+            }
+        }).addTo(map);
+    }else if(isPoligono){
+        function emCadaPoligono(feature, layer) {
+            var poligono = new L.MultiPolygon(feature.geometry.coordinates);
+            return poligono;
+        }
+        mapDataLayer = L.geoJson(geojson, {
+            style : estilo,
+            onEachFeature: emCadaPoligono
+        }).addTo(map);
+    }else{
+        mapDataLayer = L.geoJson(geojson, {style : estilo}).addTo(map);
+    }
     
     var objetoCamada = {
         "layer" : "",
