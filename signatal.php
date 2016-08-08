@@ -1,3 +1,7 @@
+<?php include 'php/conexao.php'; ?>
+
+<?php include 'php/camadas.php'; ?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,12 +21,16 @@
   
   <style type="text/css">
     #map{ width: 100%; height: 93%; }
+    
+    .legenda {
+        width: 16px;
+        height: 16px;
+        display:block;
+    }
   </style>
 </head>
 <body>
-
-
-
+    
 <nav class="navbar navbar-default">
   <div class="container-fluid">
     <!-- Brand and toggle get grouped for better mobile display -->
@@ -39,48 +47,46 @@
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
  
-      <ul class="nav navbar-nav navbar-right">
-	    <li><a href="#"><span class="glyphicon glyphicon-exclamation-sign"></span>Ajuda</a></li>
-		<li class="dropdown">
+        <ul class="nav navbar-nav navbar-right">
+            
+        <li><a href="#"><span class="glyphicon glyphicon-exclamation-sign"></span>Ajuda</a></li>
+        <li class="dropdown">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-map-marker"></span>Lista de Camadas<span class="caret"></span></a>
           <ul class="dropdown-menu">
-            <li><input type="checkbox" id="esccre" value="esccre" onclick="clicarEscola()"><label for="esccre">Escolas e Creches</label></li>
-			<li><input type="checkbox" id="poligono" value="poligono" onclick="clicarPoligono()"><label for="teste">Polígonos</label></li>
-            <li><input type="checkbox" id="c1" value="layer1" onclick="clicarArea()"><label for="c1">Áreas de Risco</label></li>
-            <li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Praças</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Favelas</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Zona Especial Norte</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Zonas Eleitorais</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Hospitais</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Limite de bairros</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Ruas e Logradouros</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Areas Verdes</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">ZPA</label></li>
-			<li><input type="checkbox" id="c2" value="layer2" ><label for="c2">Feiras Livres</label></li>
+            <?php
+                while($row = pg_fetch_row($camadas)){
+
+                    echo "<li><input type='checkbox' id='$row[6]' "
+                            . "value='$row[3]' name='camadasDoMapa' onchange='visualizaCamada(this);'>"
+                            . "<label>$row[1]</label></li>";
+
+                }
+            ?>
             <li role="separator" class="divider"></li>
-            <li><input type="checkbox" id="c3" value="all" ><label for="c3">Todas</label></li>
+            <li><input type="checkbox" value="all" onclick="selecionaTudo(this)"><label for="c3">Todas</label></li>
           </ul>
         </li>
-		<li class="dropdown">
+        <li class="dropdown" style = "width: 200px;">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-pushpin"></span>Legendas<span class="caret"></span></a>
           <ul class="dropdown-menu"><br>
-            <li><img src="images/pen.png" height="24" width="24"><i>Escolas e Creches</i></li><br>
-            <li><i>Legenda 2</i></li><br>
-            <li><i>Legenda 3</i></li><br>
+            <?php
+                while($row = pg_fetch_row($legendas)){
+                    
+                    echo "<li><div style='display:inline;'>"
+                    . "<span class='legenda' style='background-color: $row[6]; float:left;'></span><i>$row[1]</i></div></li><br>";
+
+                }
+            ?>
           </ul>
         </li>
-        </li>
-      </ul>
+    </ul>
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
 </nav>
 
+<div id="map"></div>
 
-
-	<div id="map"></div>
-	
-	<script type="text/javascript" src='js/mapa.js'></script>
-	
+<script type="text/javascript" src='js/mapa.js'></script>
 	
 </body>
 </html>
