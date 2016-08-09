@@ -1,7 +1,4 @@
 var map;
-var escolasCreches = new L.featureGroup();
-var areasRisco = new L.featureGroup();
-var poligonos = new L.featureGroup();
 var camadasMapa = [];
 
 function construirMapa(){
@@ -165,7 +162,7 @@ function plotaNoMapa(data){
     estilo.fillColor = identificador;
     estilo.color = identificador;
     
-    var mapDataLayer = null;
+    var mapDataLayer = new L.featureGroup();
     
     if(isPonto){
         mapDataLayer = L.geoJson(geojson, {
@@ -187,6 +184,7 @@ function plotaNoMapa(data){
     }else if(isPoligono){
         function emCadaPoligono(feature, layer) {
             var poligono = new L.MultiPolygon(feature.geometry.coordinates);
+            poligono.enableEdit();
             return poligono;
         }
         mapDataLayer = L.geoJson(geojson, {

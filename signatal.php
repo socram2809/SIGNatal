@@ -16,9 +16,6 @@
   <script src="js/jquery.min.js"></script>
   <script src="js/bootstrap.min.js"></script>
   
-  <script src="js/escolas_creches.js"></script>
-  <script src="js/area_risco.js"></script>
-  
   <style type="text/css">
     #map{ width: 100%; height: 93%; }
     
