@@ -26,9 +26,21 @@
         height: 16px;
         display:block;
     }
+    
+    #overlay {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        background: url(images/ajax-loader.gif) center center no-repeat;
+        z-index: 1;
+        display: none
+    }
+    
   </style>
 </head>
 <body>
+    
+<div id="overlay"></div>
     
 <nav class="navbar navbar-default">
   <div class="container-fluid">
@@ -56,7 +68,7 @@
                 while($row = pg_fetch_row($camadas)){
 
                     echo "<li><input type='checkbox' id='$row[6]' "
-                            . "value='$row[3]' name='camadasDoMapa' onchange='visualizaCamada(this);'>"
+                            . "value='$row[3]' name='camadasDoMapa' class='camadas' onchange='visualizaCamada(this);'>"
                             . "<label>$row[1]</label></li>";
 
                 }

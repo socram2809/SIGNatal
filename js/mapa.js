@@ -3,6 +3,7 @@ var camadasMapa = [];
 var camadasEditaveis = new L.FeatureGroup();
 
 function construirMapa(){
+    
     map = L.map('map').setView([-5.822089, -35.215033], 12);
 
     L.tileLayer('https://{s}.tiles.mapbox.com/v3/rowanwins.ka9knfid/{z}/{x}/{y}.png', {
@@ -23,6 +24,17 @@ function adicionarControladores(){
             featureGroup: camadasEditaveis
         }
     });
+    
+    L.drawLocal.draw.toolbar.buttons.polygon = "Desenha um polígono";
+    
+    L.drawLocal.draw.toolbar.buttons.polyline = "Desenha uma linha";
+    
+    L.drawLocal.draw.toolbar.buttons.marker = "Desenha um marcador";
+    
+    L.drawLocal.draw.toolbar.buttons.circle = "Desenha um círculo";
+    
+    L.drawLocal.draw.toolbar.buttons.rectangle = "Desenha um retângulo";
+    
     map.addControl(drawControl);
     
     map.on('draw:created', function (e) {
@@ -35,13 +47,13 @@ function adicionarControladores(){
 function visualizaCamada(elemento){
     if(elemento.checked){
         $.ajax("php/carregaDadosCamada.php", {
-		data: {
-			tabela: elemento.value,
+                data: {
+                        tabela: elemento.value,
                         legenda: elemento.id
-		},
-		success: function(data){
-			plotaNoMapa(data);
-		}
+                },
+                success: function(data){
+                        plotaNoMapa(data);
+                }
         });
     }else{
         limpaDadosCamada(elemento);
@@ -124,16 +136,23 @@ function plotaNoMapa(data){
         }).addTo(map);
     }else if(isPoligono){
         function emCadaPoligono(feature, layer) {
-            var multiPoligono = new L.MultiPolygon(feature.geometry.coordinates);
-            return multiPoligono;
+            layer.eachLayer(function(child_layer){
+                camadasEditaveis.addLayer(child_layer);
+            });
         }
         mapDataLayer = L.geoJson(geojson, {
             style : estilo,
             onEachFeature: emCadaPoligono
         }).addTo(map);
-    }else{
+    }else if(isLinha){
+        function emCadaLinha(feature, layer) {
+            layer.eachLayer(function(child_layer){
+                camadasEditaveis.addLayer(child_layer);
+            });
+        }
         mapDataLayer = L.geoJson(geojson, {
-            style : estilo
+            style : estilo,
+            onEachFeature: emCadaLinha
         }).addTo(map);
     }
     
@@ -145,11 +164,17 @@ function plotaNoMapa(data){
     objetoCamada.id = identificador;
     
     camadasMapa.push(objetoCamada);
+    
 }
 
 function limpaDadosCamada(elemento){
     var resultado = $.grep(camadasMapa, function(e){ return e.id === elemento.value; });
     var camadaEscolhida = resultado[0].layer;
+    camadaEscolhida.eachLayer(function(layer) {
+        layer.eachLayer(function(child_layer){
+            camadasEditaveis.removeLayer(child_layer);
+        });
+    });
     camadaEscolhida.clearLayers();
     map.removeLayer(camadaEscolhida);
     camadasMapa = camadasMapa.filter(function(e){ return e.id !== elemento.value; });
