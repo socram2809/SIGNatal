@@ -34,7 +34,7 @@ while ($row = pg_fetch_row($response)) {
     }
     echo ";";
 }
-echo $legenda;
+echo $table.", ;".$legenda;
 
 pg_close($conn);
 

@@ -1,106 +1,59 @@
 var map;
-var escolasCreches = new L.featureGroup();
-var areasRisco = new L.featureGroup();
-var poligonos = new L.featureGroup();
 var camadasMapa = [];
+var camadasEditaveis = new L.FeatureGroup();
 
 function construirMapa(){
-                map = L.map('map', {editable: true}).setView([-5.822089, -35.215033], 12);
+    
+    map = L.map('map').setView([-5.822089, -35.215033], 12);
 
-                L.tileLayer('https://{s}.tiles.mapbox.com/v3/rowanwins.ka9knfid/{z}/{x}/{y}.png', {
-                        maxZoom: 18,
-                }).addTo(map);
-                map.attributionControl.setPrefix('SIGNatal powered by LASID'); // Não mostra o texto 'Powered by Leaflet'.
-                
-                adicionarControladores();
+    L.tileLayer('https://{s}.tiles.mapbox.com/v3/rowanwins.ka9knfid/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+    }).addTo(map);
+    map.attributionControl.setPrefix('SIGNatal powered by LASID'); // Não mostra o texto 'Powered by Leaflet'.
+
+    adicionarControladores();
 }
 
 function adicionarControladores(){
 
-        //Adiciona o botão de Nova Linha
-        L.NewLineControl = L.Control.extend({
+    map.addLayer(camadasEditaveis);
 
-        options: {
-                position: 'topleft'
-        },
-
-        onAdd: function (map) {
-                var container = L.DomUtil.create('div', 'leaflet-control leaflet-bar'),
-                        link = L.DomUtil.create('a', '', container);
-
-                link.href = '#';
-                link.title = 'Cria uma nova linha';
-                link.innerHTML = '/\\/';
-                L.DomEvent.on(link, 'click', L.DomEvent.stop)
-                                  .on(link, 'click', function () {
-                                        map.editTools.startPolyline();
-                                  });
-
-                return container;
+    // Inicializa o controlador de desenhos e passa o FeatureGroup de camadas editáveis
+    var drawControl = new L.Control.Draw({
+        edit: {
+            featureGroup: camadasEditaveis
         }
-        });
-
-        //Adiciona o botão de criação de polígono
-        L.NewPolygonControl = L.Control.extend({
-
-        options: {
-                position: 'topleft'
-        },
-
-        onAdd: function (map) {
-                var container = L.DomUtil.create('div', 'leaflet-control leaflet-bar'),
-                        link = L.DomUtil.create('a', '', container);
-
-                link.href = '#';
-                link.title = 'Cria um novo polígono';
-                link.innerHTML = '▱';
-                L.DomEvent.on(link, 'click', L.DomEvent.stop)
-                                  .on(link, 'click', function () {
-                                        map.editTools.startPolygon();
-                                  });
-
-                return container;
-        }
-        });
-
-        //Adiciona o botão de criação de marcadores
-        L.NewMarkerControl = L.Control.extend({
-
-        options: {
-                position: 'topleft'
-        },
-
-        onAdd: function (map) {
-                var container = L.DomUtil.create('div', 'leaflet-control leaflet-bar'),
-                        link = L.DomUtil.create('a', '', container);
-
-                link.href = '#';
-                link.title = 'Adiciona um novo marcador';
-                link.innerHTML = '⚫';
-                L.DomEvent.on(link, 'click', L.DomEvent.stop)
-                                  .on(link, 'click', function () {
-                                        map.editTools.startMarker();
-                                  });
-
-                return container;
-        }
-        });
-
-        map.addControl(new L.NewMarkerControl());
-        map.addControl(new L.NewLineControl());
-        map.addControl(new L.NewPolygonControl());
+    });
+    
+    L.drawLocal.draw.toolbar.buttons.polygon = "Desenha um polígono";
+    
+    L.drawLocal.draw.toolbar.buttons.polyline = "Desenha uma linha";
+    
+    L.drawLocal.draw.toolbar.buttons.marker = "Desenha um marcador";
+    
+    L.drawLocal.draw.toolbar.buttons.circle = "Desenha um círculo";
+    
+    L.drawLocal.draw.toolbar.buttons.rectangle = "Desenha um retângulo";
+    
+    map.addControl(drawControl);
+    
+    map.on('draw:created', function (e) {
+        var layer = e.layer;
+        camadasEditaveis.addLayer(layer);
+    });
+    
 }  
 
 function visualizaCamada(elemento){
     if(elemento.checked){
         $.ajax("php/carregaDadosCamada.php", {
-		data: {
-			tabela: elemento.value,
+                data: {
+                        tabela: elemento.value,
                         legenda: elemento.id
-		},
-		success: function(data){
-			plotaNoMapa(data);
-		}
+                },
+                success: function(data){
+                        plotaNoMapa(data);
+                }
         });
     }else{
         limpaDadosCamada(elemento);
@@ -122,7 +75,11 @@ function plotaNoMapa(data){
     //Divide dados em features
     var dataArray = data.split(", ;");
     
-    var identificador = dataArray[dataArray.length - 1];
+    var identificador = dataArray[dataArray.length - 2];
+    
+    var cor = dataArray[dataArray.length - 1];
+    
+    dataArray.pop();
     
     dataArray.pop();
 
@@ -135,7 +92,7 @@ function plotaNoMapa(data){
     var isPonto = false;
     var isPoligono = false;
     var isLinha = false;
-
+    
     //Constroi as features do geojson
     dataArray.forEach(function(d){
             d = d.split(", "); //Divide os dados em atributos individuais e geometria
@@ -143,9 +100,11 @@ function plotaNoMapa(data){
             //Container de objeto feature
             var feature = {
                     "type": "Feature",
-                    "properties": {}, //Propriedades
+                    "properties": {"identificador" : ""}, //Propriedades
                     "geometry": JSON.parse(d[0]) //Converte geometria
             };
+            
+            feature.properties.identificador = identificador;
             
             if(feature.geometry.type === "MultiPoint"){
                 isPonto = true;
@@ -162,8 +121,8 @@ function plotaNoMapa(data){
         "fillColor" : "",
         "color" : ""
     };
-    estilo.fillColor = identificador;
-    estilo.color = identificador;
+    estilo.fillColor = cor;
+    estilo.color = cor;
     
     var mapDataLayer = null;
     
@@ -171,30 +130,30 @@ function plotaNoMapa(data){
         mapDataLayer = L.geoJson(geojson, {
             pointToLayer: function (feature, latlng) {
                 var ponto = L.circleMarker(latlng, estilo);
-                ponto.on({
-                    mousedown: function () {
-                      map.on('mousemove', function (e) {
-                        ponto.setLatLng(e.latlng);
-                      });
-                    }
-                }); 
-                map.on('mouseup',function(e){
-                  map.removeEventListener('mousemove');
-                });
+                camadasEditaveis.addLayer(ponto);
                 return ponto;
             }
         }).addTo(map);
     }else if(isPoligono){
         function emCadaPoligono(feature, layer) {
-            var poligono = new L.MultiPolygon(feature.geometry.coordinates);
-            return poligono;
+            layer.eachLayer(function(child_layer){
+                camadasEditaveis.addLayer(child_layer);
+            });
         }
         mapDataLayer = L.geoJson(geojson, {
             style : estilo,
             onEachFeature: emCadaPoligono
         }).addTo(map);
-    }else{
-        mapDataLayer = L.geoJson(geojson, {style : estilo}).addTo(map);
+    }else if(isLinha){
+        function emCadaLinha(feature, layer) {
+            layer.eachLayer(function(child_layer){
+                camadasEditaveis.addLayer(child_layer);
+            });
+        }
+        mapDataLayer = L.geoJson(geojson, {
+            style : estilo,
+            onEachFeature: emCadaLinha
+        }).addTo(map);
     }
     
     var objetoCamada = {
@@ -205,14 +164,20 @@ function plotaNoMapa(data){
     objetoCamada.id = identificador;
     
     camadasMapa.push(objetoCamada);
+    
 }
 
 function limpaDadosCamada(elemento){
-    var resultado = $.grep(camadasMapa, function(e){ return e.id === elemento.id; });
+    var resultado = $.grep(camadasMapa, function(e){ return e.id === elemento.value; });
     var camadaEscolhida = resultado[0].layer;
+    camadaEscolhida.eachLayer(function(layer) {
+        layer.eachLayer(function(child_layer){
+            camadasEditaveis.removeLayer(child_layer);
+        });
+    });
     camadaEscolhida.clearLayers();
     map.removeLayer(camadaEscolhida);
-    camadasMapa = camadasMapa.filter(function(e){ return e.id !== elemento.id; });
+    camadasMapa = camadasMapa.filter(function(e){ return e.id !== elemento.value; });
 }
 
 $(document).ready(construirMapa);

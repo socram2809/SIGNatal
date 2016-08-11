@@ -9,15 +9,14 @@
   <title>SIGNatal</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/bootstrap.min.css">
-  <link href="http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css">
   <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+  <link rel="stylesheet" href="http://leaflet.github.io/Leaflet.draw/leaflet.draw.css"/>
   <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-  <script src="js/Leaflet.Editable.js"></script>
+  <script src="http://leaflet.github.io/Leaflet.draw/leaflet.draw.js"></script>
+  
   <script src="js/jquery.min.js"></script>
   <script src="js/bootstrap.min.js"></script>
-  
-  <script src="js/escolas_creches.js"></script>
-  <script src="js/area_risco.js"></script>
   
   <style type="text/css">
     #map{ width: 100%; height: 93%; }
@@ -27,9 +26,21 @@
         height: 16px;
         display:block;
     }
+    
+    #overlay {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        background: url(images/ajax-loader.gif) center center no-repeat;
+        z-index: 1;
+        display: none
+    }
+    
   </style>
 </head>
 <body>
+    
+<div id="overlay"></div>
     
 <nav class="navbar navbar-default">
   <div class="container-fluid">
@@ -57,7 +68,7 @@
                 while($row = pg_fetch_row($camadas)){
 
                     echo "<li><input type='checkbox' id='$row[6]' "
-                            . "value='$row[3]' name='camadasDoMapa' onchange='visualizaCamada(this);'>"
+                            . "value='$row[3]' name='camadasDoMapa' class='camadas' onchange='visualizaCamada(this);'>"
                             . "<label>$row[1]</label></li>";
 
                 }
