@@ -16,7 +16,7 @@ $legenda = $_GET['legenda'];
 $fieldstr = "";
 
 //Pega a geometria como geojson em SIRGAS 2000
-$fieldstr = $fieldstr . "ST_AsGeoJSON(ST_Transform(l.geom,4674))";
+$fieldstr = $fieldstr . "l.object_id,ST_AsGeoJSON(ST_Transform(l.geom,4674))";
 
 //Cria SQL básico
 $sql = "SELECT $fieldstr FROM $table l";
