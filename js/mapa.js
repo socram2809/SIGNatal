@@ -2,6 +2,23 @@ var map;
 var camadasMapa = [];
 var camadasEditaveis = new L.FeatureGroup();
 
+function atualizaCamadas(){
+    camadasEditaveis.eachLayer(function(layer){
+        var json = layer.toGeoJSON();
+        $.ajax("php/atualizaDadosCamada.php", {
+                data: {
+                        tabela: layer.properties.identificador,
+                        id: layer.properties.id,
+                        geom: json.geometry
+                },
+                type: "POST"/*,
+                success: function(data){
+                        console.log(data);
+                }*/
+        });
+    });
+}
+
 function construirMapa(){
     
     map = L.map('map').setView([-5.822089, -35.215033], 12);
@@ -42,6 +59,10 @@ function adicionarControladores(){
         camadasEditaveis.addLayer(layer);
     });
     
+    map.on('draw:edited', function (e) {
+        atualizaCamadas(e);
+    });
+    
 }  
 
 function visualizaCamada(elemento){
@@ -71,7 +92,7 @@ function selecionaTudo(elemento){
 }
 
 function plotaNoMapa(data){
-    
+        
     //Divide dados em features
     var dataArray = data.split(", ;");
     
@@ -100,11 +121,12 @@ function plotaNoMapa(data){
             //Container de objeto feature
             var feature = {
                     "type": "Feature",
-                    "properties": {"identificador" : ""}, //Propriedades
-                    "geometry": JSON.parse(d[0]) //Converte geometria
+                    "properties": {"identificador" : "", "id" : ""}, //Propriedades
+                    "geometry": JSON.parse(d[1]) //Converte geometria
             };
             
             feature.properties.identificador = identificador;
+            feature.properties.id = d[0];
             
             if(feature.geometry.type === "MultiPoint"){
                 isPonto = true;
@@ -130,6 +152,7 @@ function plotaNoMapa(data){
         mapDataLayer = L.geoJson(geojson, {
             pointToLayer: function (feature, latlng) {
                 var ponto = L.circleMarker(latlng, estilo);
+                ponto.properties = feature.properties;
                 camadasEditaveis.addLayer(ponto);
                 return ponto;
             }
@@ -137,6 +160,7 @@ function plotaNoMapa(data){
     }else if(isPoligono){
         function emCadaPoligono(feature, layer) {
             layer.eachLayer(function(child_layer){
+                child_layer.properties = feature.properties;
                 camadasEditaveis.addLayer(child_layer);
             });
         }
