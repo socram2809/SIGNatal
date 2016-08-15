@@ -11,12 +11,47 @@ function atualizaCamadas(){
                         id: layer.properties.id,
                         geom: json.geometry
                 },
-                type: "POST"/*,
-                success: function(data){
-                        console.log(data);
-                }*/
+                type: "POST",
+                beforeSend: function() {
+                    $(".spinner").show();         
+                },
+                complete: function(){
+                    $(".spinner").hide();
+                }
         });
     });
+}
+
+function visualizaCamada(elemento){
+    if(elemento.checked){
+        $.ajax("php/carregaDadosCamada.php", {
+                data: {
+                        tabela: elemento.value,
+                        legenda: elemento.id
+                },
+                success: function(data){
+                        plotaNoMapa(data);
+                },
+                beforeSend: function() {
+                    $(".spinner").show();         
+                },
+                complete: function(){
+                    $(".spinner").hide();
+                }
+        });
+    }else{
+        $.ajax("signatal.php",{
+                success: function(){
+                    limpaDadosCamada(elemento);
+                },
+                beforeSend: function() {
+                    $(".spinner").show();         
+                },
+                complete: function(){
+                    $(".spinner").hide();
+                }
+        });
+    }
 }
 
 function construirMapa(){
@@ -64,22 +99,6 @@ function adicionarControladores(){
     });
     
 }  
-
-function visualizaCamada(elemento){
-    if(elemento.checked){
-        $.ajax("php/carregaDadosCamada.php", {
-                data: {
-                        tabela: elemento.value,
-                        legenda: elemento.id
-                },
-                success: function(data){
-                        plotaNoMapa(data);
-                }
-        });
-    }else{
-        limpaDadosCamada(elemento);
-    }
-}
 
 function selecionaTudo(elemento){
     checkboxes = document.getElementsByName('camadasDoMapa');
@@ -171,6 +190,7 @@ function plotaNoMapa(data){
     }else if(isLinha){
         function emCadaLinha(feature, layer) {
             layer.eachLayer(function(child_layer){
+                child_layer.properties = feature.properties;
                 camadasEditaveis.addLayer(child_layer);
             });
         }
@@ -205,4 +225,3 @@ function limpaDadosCamada(elemento){
 }
 
 $(document).ready(construirMapa);
-
