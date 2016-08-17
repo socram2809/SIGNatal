@@ -129,8 +129,6 @@
 
                 }
             ?>
-            <li role="separator" class="divider"></li>
-            <li><input type="checkbox" value="all" onclick="selecionaTudo(this)"><label for="c3">Todas</label></li>
           </ul>
         </li>
         <li class="dropdown" style = "width: 200px;">
