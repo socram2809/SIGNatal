@@ -11,12 +11,41 @@ function atualizaCamadas(){
                         id: layer.properties.id,
                         geom: json.geometry
                 },
-                type: "POST"/*,
-                success: function(data){
-                        console.log(data);
-                }*/
+                type: "POST"
         });
     });
+}
+
+function visualizaCamada(elemento){
+    if(elemento.checked){
+        $.ajax("php/carregaDadosCamada.php", {
+                data: {
+                        tabela: elemento.value,
+                        legenda: elemento.id
+                },
+                success: function(data){
+                        plotaNoMapa(data);
+                },
+                beforeSend: function() {
+                    $(".spinner").show();         
+                },
+                complete: function(){
+                    $(".spinner").hide();
+                }
+        });
+    }else{
+        $.ajax("signatal.php",{
+                success: function(){
+                    limpaDadosCamada(elemento);
+                },
+                beforeSend: function() {
+                    $(".spinner").show();         
+                },
+                complete: function(){
+                    $(".spinner").hide();
+                }
+        });
+    }
 }
 
 function construirMapa(){
@@ -39,6 +68,10 @@ function adicionarControladores(){
     var drawControl = new L.Control.Draw({
         edit: {
             featureGroup: camadasEditaveis
+        },
+        draw: {
+            circle: false,
+            rectangle: false
         }
     });
     
@@ -48,10 +81,6 @@ function adicionarControladores(){
     
     L.drawLocal.draw.toolbar.buttons.marker = "Desenha um marcador";
     
-    L.drawLocal.draw.toolbar.buttons.circle = "Desenha um círculo";
-    
-    L.drawLocal.draw.toolbar.buttons.rectangle = "Desenha um retângulo";
-    
     map.addControl(drawControl);
     
     map.on('draw:created', function (e) {
@@ -60,35 +89,27 @@ function adicionarControladores(){
     });
     
     map.on('draw:edited', function (e) {
-        atualizaCamadas(e);
-    });
-    
-}  
-
-function visualizaCamada(elemento){
-    if(elemento.checked){
-        $.ajax("php/carregaDadosCamada.php", {
-                data: {
-                        tabela: elemento.value,
-                        legenda: elemento.id
+        $.ajax("signatal.php",{
+                success: function(){
+                    atualizaCamadas(e);
                 },
-                success: function(data){
-                        plotaNoMapa(data);
+                beforeSend: function() {
+                    $(".spinner").show();         
+                },
+                complete: function(){
+                    $(".spinner").hide();
                 }
         });
-    }else{
-        limpaDadosCamada(elemento);
-    }
-}
-
-function selecionaTudo(elemento){
-    checkboxes = document.getElementsByName('camadasDoMapa');
-    for(var i=0, n=checkboxes.length;i<n;i++) {
-        if(checkboxes[i].checked !== elemento.checked){
-            checkboxes[i].checked = elemento.checked;
-            visualizaCamada(checkboxes[i]);
-        }
-    }
+    });
+    
+    $(".leaflet-draw-edit-edit").mousedown(function(){
+        $(".spinner").show();
+    });
+    
+    $(".leaflet-draw-edit-edit").click(function(){
+        $(".spinner").hide();
+    });
+    
 }
 
 function plotaNoMapa(data){
@@ -171,6 +192,7 @@ function plotaNoMapa(data){
     }else if(isLinha){
         function emCadaLinha(feature, layer) {
             layer.eachLayer(function(child_layer){
+                child_layer.properties = feature.properties;
                 camadasEditaveis.addLayer(child_layer);
             });
         }
@@ -205,4 +227,3 @@ function limpaDadosCamada(elemento){
 }
 
 $(document).ready(construirMapa);
-
