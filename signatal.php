@@ -27,16 +27,6 @@
         display:block;
     }
     
-    /*#overlay {
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        z-index: 1;
-        display: none;
-        background-position: center;
-        background-repeat: no-repeat;
-    }*/
-    
     .spinner {
       position: fixed;
       width: 100%;
@@ -124,7 +114,7 @@
                 while($row = pg_fetch_row($camadas)){
 
                     echo "<li><input type='checkbox' id='$row[6]' "
-                            . "value='$row[3]' name='camadasDoMapa' class='camadas' onchange='visualizaCamada(this);'>"
+                            . "value='$row[3]' name='camadasDoMapa' class='camadas' onchange='visualizaCamada(this); refinaControlador();'>"
                             . "<label>$row[1]</label></li>";
 
                 }
