@@ -1,6 +1,7 @@
 var map;
 var camadasMapa = [];
 var camadasEditaveis = new L.FeatureGroup();
+var drawControl;
 
 function atualizaCamadas(){
     camadasEditaveis.eachLayer(function(layer){
@@ -14,6 +15,23 @@ function atualizaCamadas(){
                 type: "POST"
         });
     });
+}
+
+function refinaControlador(){
+    map.removeControl(drawControl);
+    var checkboxes = document.getElementsByName("camadasDoMapa");
+    var cont = 0;
+    for(var i=0;i<checkboxes.length;i++){
+        if(checkboxes[i].checked){
+            cont++;
+        }
+    }
+    if(cont === 1){
+        liberaTodos();
+    }else{
+        inicializaControlador();
+    }
+    map.addControl(drawControl);
 }
 
 function visualizaCamada(elemento){
@@ -60,12 +78,23 @@ function construirMapa(){
     adicionarControladores();
 }
 
-function adicionarControladores(){
+function inicializaControlador(){
+    drawControl = new L.Control.Draw({
+        edit: {
+            featureGroup: camadasEditaveis
+        },
+        draw: {
+            circle: false,
+            rectangle: false,
+            polygon: false,
+            polyline: false,
+            marker: false
+        }
+    });
+}
 
-    map.addLayer(camadasEditaveis);
-
-    // Inicializa o controlador de desenhos e passa o FeatureGroup de camadas editáveis
-    var drawControl = new L.Control.Draw({
+function liberaTodos(){
+    drawControl = new L.Control.Draw({
         edit: {
             featureGroup: camadasEditaveis
         },
@@ -74,18 +103,44 @@ function adicionarControladores(){
             rectangle: false
         }
     });
-    
-    L.drawLocal.draw.toolbar.buttons.polygon = "Desenha um polígono";
-    
-    L.drawLocal.draw.toolbar.buttons.polyline = "Desenha uma linha";
-    
-    L.drawLocal.draw.toolbar.buttons.marker = "Desenha um marcador";
-    
+}
+
+function adicionarControladores(){
+
+    map.addLayer(camadasEditaveis);
+
+    // Inicializa o controlador de desenhos e passa o FeatureGroup de camadas editáveis
+    inicializaControlador();
+
     map.addControl(drawControl);
     
     map.on('draw:created', function (e) {
         var layer = e.layer;
-        camadasEditaveis.addLayer(layer);
+        var checkboxes = document.getElementsByName("camadasDoMapa");
+        var tabela = null;
+        var cor = null;
+        for(var i=0;i<checkboxes.length;i++){
+            if(checkboxes[i].checked){
+                tabela = checkboxes[i].value;
+                cor = checkboxes[i].id;
+            }
+        }
+        var json = layer.toGeoJSON();
+        var estilo = {
+            "fillColor" : "",
+            "color" : ""
+        };
+        estilo.fillColor = cor;
+        estilo.color = cor;
+        var ponto = L.circleMarker(layer.getLatLng(), estilo);
+        camadasEditaveis.addLayer(ponto);
+        $.ajax("php/inserirDadosCamada.php", {
+                data: {
+                        tabela: tabela,
+                        geom: json.geometry
+                },
+                type: "POST"
+        });
     });
     
     map.on('draw:edited', function (e) {
@@ -224,6 +279,16 @@ function limpaDadosCamada(elemento){
     camadaEscolhida.clearLayers();
     map.removeLayer(camadaEscolhida);
     camadasMapa = camadasMapa.filter(function(e){ return e.id !== elemento.value; });
+    var checkboxes = document.getElementsByName("camadasDoMapa");
+    var achou = false;
+    for(var i=0;i<checkboxes.length;i++){
+        if(checkboxes[i].checked){
+            achou = true;
+        }
+    }
+    if(!achou){
+        camadasEditaveis.clearLayers();
+    }
 }
 
 $(document).ready(construirMapa);
