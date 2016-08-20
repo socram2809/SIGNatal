@@ -27,7 +27,13 @@ function refinaControlador(){
         }
     }
     if(cont === 1){
-        liberaTodos();
+        if(camadasMapa[0].tipo === "MultiPoint"){
+            liberaPonto();
+        }else if(camadasMapa[0].tipo === "MultiPolygon"){
+            liberaPoligono();
+        }else if(camadasMapa[0].tipo === "MultiLineString"){
+            liberaLinha();
+        }
     }else{
         inicializaControlador();
     }
@@ -93,14 +99,44 @@ function inicializaControlador(){
     });
 }
 
-function liberaTodos(){
+function liberaPonto(){
     drawControl = new L.Control.Draw({
         edit: {
             featureGroup: camadasEditaveis
         },
         draw: {
             circle: false,
-            rectangle: false
+            rectangle: false,
+            polygon: false,
+            polyline: false
+        }
+    });
+}
+
+function liberaPoligono(){
+    drawControl = new L.Control.Draw({
+        edit: {
+            featureGroup: camadasEditaveis
+        },
+        draw: {
+            circle: false,
+            rectangle: false,
+            polyline: false,
+            marker: false
+        }
+    });
+}
+
+function liberaLinha(){
+    drawControl = new L.Control.Draw({
+        edit: {
+            featureGroup: camadasEditaveis
+        },
+        draw: {
+            circle: false,
+            rectangle: false,
+            marker: false,
+            polygon: false
         }
     });
 }
@@ -132,14 +168,28 @@ function adicionarControladores(){
         };
         estilo.fillColor = cor;
         estilo.color = cor;
-        var ponto = L.circleMarker(layer.getLatLng(), estilo);
-        camadasEditaveis.addLayer(ponto);
+        var geometria = null;
+        if(json.geometry.type === "Polygon"){
+            layer.options.color = cor;
+            layer.options.fillColor = cor;
+            geometria = layer;
+        }else if(json.geometry.type === "LineString"){
+            layer.options.color = cor;
+            layer.options.fillColor = cor;
+            geometria = layer;
+        }else{
+            geometria = L.circleMarker(layer.getLatLng(), estilo);
+        }
+        camadasEditaveis.addLayer(geometria);
         $.ajax("php/inserirDadosCamada.php", {
                 data: {
                         tabela: tabela,
                         geom: json.geometry
                 },
-                type: "POST"
+                type: "POST",
+                complete: function(data){
+                    console.log(data);
+                }
         });
     });
     
@@ -189,6 +239,7 @@ function plotaNoMapa(data){
     var isPonto = false;
     var isPoligono = false;
     var isLinha = false;
+    var tipo = null;
     
     //Constroi as features do geojson
     dataArray.forEach(function(d){
@@ -206,10 +257,13 @@ function plotaNoMapa(data){
             
             if(feature.geometry.type === "MultiPoint"){
                 isPonto = true;
+                tipo = "MultiPoint";
             }else if(feature.geometry.type === "MultiPolygon"){
                 isPoligono = true;
+                tipo = "MultiPolygon";
             }else if(feature.geometry.type === "MultiLineString"){
                 isLinha = true;
+                tipo = "MultiLineString";
             }
 
             geojson.features.push(feature);
@@ -259,13 +313,16 @@ function plotaNoMapa(data){
     
     var objetoCamada = {
         "layer" : "",
-        "id" : ""
+        "id" : "",
+        "tipo": "" 
     };
     objetoCamada.layer = mapDataLayer;
     objetoCamada.id = identificador;
+    objetoCamada.tipo = tipo;
     
     camadasMapa.push(objetoCamada);
     
+    refinaControlador();
 }
 
 function limpaDadosCamada(elemento){
@@ -289,6 +346,7 @@ function limpaDadosCamada(elemento){
     if(!achou){
         camadasEditaveis.clearLayers();
     }
+    refinaControlador();
 }
 
 $(document).ready(construirMapa);
