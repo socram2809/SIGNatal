@@ -16,7 +16,7 @@ $legenda = $_GET['legenda'];
 $fieldstr = "";
 
 //Pega a geometria como geojson em SIRGAS 2000
-$fieldstr = $fieldstr . "l.object_id,ST_AsGeoJSON(ST_Transform(l.geom,4674))";
+$fieldstr = $fieldstr . "l.*,ST_AsGeoJSON(ST_Transform(l.geom,4674))";
 
 //Cria SQL básico
 $sql = "SELECT $fieldstr FROM $table l";
@@ -27,6 +27,16 @@ if (!$response = pg_query($conn, $sql)) {
     exit;
 }
 
+//Retorna os campos
+$fields = array();
+$i = pg_num_fields($response);
+for ($j = 0; $j < ($i - 1); $j++) {
+    if($j != 1){
+        $fieldname = pg_field_name($response, $j);
+        $fields[] = $fieldname;
+    }
+}
+
 //Faz echo dos dados direto para o DOM
 while ($row = pg_fetch_row($response)) {
     foreach ($row as $i => $attr){
@@ -34,7 +44,7 @@ while ($row = pg_fetch_row($response)) {
     }
     echo ";";
 }
-echo $table.", ;".$legenda;
+echo json_encode($fields).", ;".$table.", ;".$legenda;
 
 pg_close($conn);
 
