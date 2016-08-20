@@ -114,7 +114,7 @@
                 while($row = pg_fetch_row($camadas)){
 
                     echo "<li><input type='checkbox' id='$row[6]' "
-                            . "value='$row[3]' name='camadasDoMapa' class='camadas' onchange='visualizaCamada(this); refinaControlador();'>"
+                            . "value='$row[3]' name='camadasDoMapa' class='camadas' onchange='visualizaCamada(this);'>"
                             . "<label>$row[1]</label></li>";
 
                 }
