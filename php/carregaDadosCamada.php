@@ -30,7 +30,7 @@ if (!$response = pg_query($conn, $sql)) {
 //Retorna os campos
 $fields = array();
 $i = pg_num_fields($response);
-for ($j = 0; $j < ($i - 1); $j++) {
+for ($j = 1; $j < ($i - 1); $j++) {
     if($j != 1){
         $fieldname = pg_field_name($response, $j);
         $fields[] = $fieldname;

@@ -21,6 +21,10 @@
   <style type="text/css">
     #map{ width: 100%; height: 93%; }
     
+    #setaAtributos{
+        display: none;
+    }
+    
     .legenda {
         width: 16px;
         height: 16px;
@@ -140,6 +144,33 @@
 </nav>   
     
 <div id="map"></div>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 id="tituloModal" class="modal-title"></h4>
+      </div>
+      <div class="modal-body">
+          <ol id="listaAtributos">
+          </ol>
+      </div>
+      <div class="modal-footer">
+        <button id="salvarGeometria" type="button" class="btn btn-default" data-dismiss="modal">Salvar</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Trigger the modal with a button -->
+<button id="setaAtributos" type="button" class="btn btn-info btn-lg" data-toggle="modal" 
+        data-target="#myModal">Open Modal</button>
 
 <script type="text/javascript" src='js/mapa.js'></script>
 	

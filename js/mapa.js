@@ -2,6 +2,9 @@ var map;
 var camadasMapa = [];
 var camadasEditaveis = new L.FeatureGroup();
 var drawControl;
+var tabela;
+var campos = new Array();
+var atributosGeometria = [];
 
 function atualizaCamadas(){
     camadasEditaveis.eachLayer(function(layer){
@@ -189,7 +192,8 @@ function adicionarControladores(){
         $.ajax("php/inserirDadosCamada.php", {
                 data: {
                         tabela: tabela,
-                        geom: json.geometry
+                        geom: json.geometry,
+                        valores: JSON.stringify(atributosGeometria)
                 },
                 type: "POST"
         });
@@ -208,6 +212,32 @@ function adicionarControladores(){
                 complete: function(){
                     $(".spinner").hide();
                 }
+        });
+    });
+    
+    map.on('draw:drawstart', function (e) {
+        $("#setaAtributos").click();
+        $("#tituloModal").html(tabela);
+        var listaAtributos = document.getElementById("listaAtributos");
+        while (listaAtributos.firstChild) {
+            listaAtributos.removeChild(listaAtributos.firstChild);
+        }
+        for(var i = 0; i < campos.length; i++){
+            var campo = document.createElement("LI");
+            var valor = document.createTextNode(campos[i]+": ");
+            var input = document.createElement("INPUT");
+            input.setAttribute("type","text");
+            input.setAttribute("name","atributosGeometria");
+            input.setAttribute("maxlength","255");
+            campo.appendChild(valor);
+            campo.appendChild(input);
+            listaAtributos.appendChild(campo);
+        }
+        $("#salvarGeometria").click(function(){
+            var geometrias = document.getElementsByName("atributosGeometria");
+            for(var i = 0; i < geometrias.length; i++){
+                atributosGeometria.push(geometrias[i].value);
+            }
         });
     });
     
@@ -230,7 +260,11 @@ function plotaNoMapa(data){
     
     fields = JSON.parse(dataArray[dataArray.length - 3]);
     
+    campos = fields;
+    
     var identificador = dataArray[dataArray.length - 2];
+    
+    tabela = identificador;
     
     var cor = dataArray[dataArray.length - 1];
     
@@ -255,8 +289,9 @@ function plotaNoMapa(data){
     dataArray.forEach(function(d){
             d = d.split(", "); //Divide os dados em atributos individuais e geometria
             
-            //Remove a coluna geométrica
-            d.splice(1,1);
+            //Remove o id e a coluna geometrica
+            d.splice(0,1);
+            d.splice(0,1);
 
             //Container de objeto feature
             var feature = {
