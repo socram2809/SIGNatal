@@ -2,6 +2,9 @@ var map;
 var camadasMapa = [];
 var camadasEditaveis = new L.FeatureGroup();
 var drawControl;
+var tabela;
+var campos = new Array();
+var atributosGeometria = [];
 
 function atualizaCamadas(){
     camadasEditaveis.eachLayer(function(layer){
@@ -27,12 +30,16 @@ function refinaControlador(){
         }
     }
     if(cont === 1){
-        if(camadasMapa[0].tipo === "MultiPoint"){
-            liberaPonto();
-        }else if(camadasMapa[0].tipo === "MultiPolygon"){
-            liberaPoligono();
-        }else if(camadasMapa[0].tipo === "MultiLineString"){
-            liberaLinha();
+        for(var i = 0; i < camadasMapa.length ; i ++){
+            if(camadasMapa[i].tipo !== "undefined"){
+                if(camadasMapa[i].tipo === "MultiPoint"){
+                    liberaPonto();
+                }else if(camadasMapa[i].tipo === "MultiPolygon"){
+                    liberaPoligono();
+                }else if(camadasMapa[i].tipo === "MultiLineString"){
+                    liberaLinha();
+                }
+            }
         }
     }else{
         inicializaControlador();
@@ -155,10 +162,12 @@ function adicionarControladores(){
         var checkboxes = document.getElementsByName("camadasDoMapa");
         var tabela = null;
         var cor = null;
+        var elemento = null;
         for(var i=0;i<checkboxes.length;i++){
             if(checkboxes[i].checked){
                 tabela = checkboxes[i].value;
                 cor = checkboxes[i].id;
+                elemento = checkboxes[i];
             }
         }
         var json = layer.toGeoJSON();
@@ -180,17 +189,16 @@ function adicionarControladores(){
         }else{
             geometria = L.circleMarker(layer.getLatLng(), estilo);
         }
-        camadasEditaveis.addLayer(geometria);
         $.ajax("php/inserirDadosCamada.php", {
                 data: {
                         tabela: tabela,
-                        geom: json.geometry
+                        geom: json.geometry,
+                        valores: JSON.stringify(atributosGeometria)
                 },
-                type: "POST",
-                complete: function(data){
-                    console.log(data);
-                }
+                type: "POST"
         });
+        limpaDadosCamada(elemento);
+        visualizaCamada(elemento);
     });
     
     map.on('draw:edited', function (e) {
@@ -204,6 +212,32 @@ function adicionarControladores(){
                 complete: function(){
                     $(".spinner").hide();
                 }
+        });
+    });
+    
+    map.on('draw:drawstart', function (e) {
+        $("#setaAtributos").click();
+        $("#tituloModal").html(tabela);
+        var listaAtributos = document.getElementById("listaAtributos");
+        while (listaAtributos.firstChild) {
+            listaAtributos.removeChild(listaAtributos.firstChild);
+        }
+        for(var i = 0; i < campos.length; i++){
+            var campo = document.createElement("LI");
+            var valor = document.createTextNode(campos[i]+": ");
+            var input = document.createElement("INPUT");
+            input.setAttribute("type","text");
+            input.setAttribute("name","atributosGeometria");
+            input.setAttribute("maxlength","255");
+            campo.appendChild(valor);
+            campo.appendChild(input);
+            listaAtributos.appendChild(campo);
+        }
+        $("#salvarGeometria").click(function(){
+            var geometrias = document.getElementsByName("atributosGeometria");
+            for(var i = 0; i < geometrias.length; i++){
+                atributosGeometria.push(geometrias[i].value);
+            }
         });
     });
     
@@ -222,9 +256,19 @@ function plotaNoMapa(data){
     //Divide dados em features
     var dataArray = data.split(", ;");
     
+    var fields = new Array();
+    
+    fields = JSON.parse(dataArray[dataArray.length - 3]);
+    
+    campos = fields;
+    
     var identificador = dataArray[dataArray.length - 2];
     
+    tabela = identificador;
+    
     var cor = dataArray[dataArray.length - 1];
+    
+    dataArray.pop();
     
     dataArray.pop();
     
@@ -244,13 +288,21 @@ function plotaNoMapa(data){
     //Constroi as features do geojson
     dataArray.forEach(function(d){
             d = d.split(", "); //Divide os dados em atributos individuais e geometria
+            
+            //Remove o id e a coluna geometrica
+            d.splice(0,1);
+            d.splice(0,1);
 
             //Container de objeto feature
             var feature = {
                     "type": "Feature",
-                    "properties": {"identificador" : "", "id" : ""}, //Propriedades
-                    "geometry": JSON.parse(d[1]) //Converte geometria
+                    "properties": {"identificador" : "", "id" : "", "popup" : {}}, //Propriedades
+                    "geometry": JSON.parse(d[d.length - 1]) //Converte geometria
             };
+            
+            for(var i=0;i<fields.length;i++){
+                feature.properties.popup[fields[i]] = d[i];
+            }
             
             feature.properties.identificador = identificador;
             feature.properties.id = d[0];
@@ -285,10 +337,22 @@ function plotaNoMapa(data){
                 ponto.properties = feature.properties;
                 camadasEditaveis.addLayer(ponto);
                 return ponto;
+            },
+            onEachFeature: function (feature,layer){
+                var html = "";
+                for(prop in feature.properties.popup){
+                    html += prop+": "+feature.properties.popup[prop]+"<br>";
+                }
+                layer.bindPopup(html);
             }
         }).addTo(map);
     }else if(isPoligono){
         function emCadaPoligono(feature, layer) {
+            var html = "";
+            for(prop in feature.properties.popup){
+                html += prop+": "+feature.properties.popup[prop]+"<br>";
+            }
+            layer.bindPopup(html);
             layer.eachLayer(function(child_layer){
                 child_layer.properties = feature.properties;
                 camadasEditaveis.addLayer(child_layer);
@@ -300,6 +364,11 @@ function plotaNoMapa(data){
         }).addTo(map);
     }else if(isLinha){
         function emCadaLinha(feature, layer) {
+            var html = "";
+            for(prop in feature.properties.popup){
+                html += prop+": "+feature.properties.popup[prop]+"<br>";
+            }
+            layer.bindPopup(html);
             layer.eachLayer(function(child_layer){
                 child_layer.properties = feature.properties;
                 camadasEditaveis.addLayer(child_layer);
@@ -336,16 +405,6 @@ function limpaDadosCamada(elemento){
     camadaEscolhida.clearLayers();
     map.removeLayer(camadaEscolhida);
     camadasMapa = camadasMapa.filter(function(e){ return e.id !== elemento.value; });
-    var checkboxes = document.getElementsByName("camadasDoMapa");
-    var achou = false;
-    for(var i=0;i<checkboxes.length;i++){
-        if(checkboxes[i].checked){
-            achou = true;
-        }
-    }
-    if(!achou){
-        camadasEditaveis.clearLayers();
-    }
     refinaControlador();
 }
 

@@ -13,10 +13,16 @@ $array = $_POST['geom'];
 
 $geom = json_encode($array);
 
-$fieldstr = "ST_Transform(ST_SetSRID(ST_Multi(ST_GeomFromGeoJSON('$geom')),4674),31985)";
+$valores = json_decode(stripslashes($_POST['valores']));
+
+$fieldstr = "nextval('".$tabela."_seq'),ST_Transform(ST_SetSRID(ST_Multi(ST_GeomFromGeoJSON('$geom')),4674),31985) ";
+
+for($i = 0; $i < count($valores) ; $i++) {
+    $fieldstr = $fieldstr.",'$valores[$i]' ";
+}
 
 //Cria SQL
-$sql = "INSERT INTO $tabela (geom) VALUES ($fieldstr)";
+$sql = "INSERT INTO $tabela VALUES ($fieldstr)";
 
 //Envia a query
 if (!$response = pg_query($conn, $sql)) {
