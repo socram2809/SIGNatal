@@ -11,12 +11,37 @@ function atualizaCamadas(){
         var json = layer.toGeoJSON();
         $.ajax("php/atualizaDadosCamada.php", {
                 data: {
-                        tabela: layer.properties.identificador,
-                        id: layer.properties.id,
-                        geom: json.geometry
+                    tabela: layer.properties.identificador,
+                    id: layer.properties.id,
+                    geom: json.geometry
                 },
                 type: "POST"
         });
+    });
+}
+
+function atualizaGeometria(layer){
+    var json = layer.toGeoJSON();
+    $.ajax("php/atualizaGeometriaCamada.php", {
+            data: {
+                tabela: layer.properties.identificador,
+                id: layer.properties.id,
+                valores: JSON.stringify(atributosGeometria),
+                campos: JSON.stringify(campos),
+                geom: json.geometry
+            },
+            type: "POST",
+            success: function(){
+                var checkboxes = document.getElementsByName("camadasDoMapa");
+                var elemento = null;
+                for(var i=0;i<checkboxes.length;i++){
+                    if(checkboxes[i].checked){
+                        elemento = checkboxes[i];
+                    }
+                }
+                limpaDadosCamada(elemento);
+                visualizaCamada(elemento);
+            }
     });
 }
 
@@ -218,6 +243,8 @@ function adicionarControladores(){
     map.on('draw:drawstart', function (e) {
         $("#setaAtributos").click();
         $("#tituloModal").html(tabela);
+        $("#salvarGeometria").show();
+        $("#editarGeometria").hide();
         var listaAtributos = document.getElementById("listaAtributos");
         while (listaAtributos.firstChild) {
             listaAtributos.removeChild(listaAtributos.firstChild);
@@ -289,6 +316,8 @@ function plotaNoMapa(data){
     dataArray.forEach(function(d){
             d = d.split(", "); //Divide os dados em atributos individuais e geometria
             
+            var id = d[0];
+            
             //Remove o id e a coluna geometrica
             d.splice(0,1);
             d.splice(0,1);
@@ -305,7 +334,7 @@ function plotaNoMapa(data){
             }
             
             feature.properties.identificador = identificador;
-            feature.properties.id = d[0];
+            feature.properties.id = id;
             
             if(feature.geometry.type === "MultiPoint"){
                 isPonto = true;
@@ -344,6 +373,11 @@ function plotaNoMapa(data){
                     html += prop+": "+feature.properties.popup[prop]+"<br>";
                 }
                 layer.bindPopup(html);
+                layer.properties = feature.properties;
+                //bind click
+                layer.on('click', function (e) {
+                    mostraEdicao(layer);
+                });
             }
         }).addTo(map);
     }else if(isPoligono){
@@ -356,6 +390,10 @@ function plotaNoMapa(data){
             layer.eachLayer(function(child_layer){
                 child_layer.properties = feature.properties;
                 camadasEditaveis.addLayer(child_layer);
+                //bind click
+                child_layer.on('click', function (e) {
+                    mostraEdicao(child_layer);
+                });
             });
         }
         mapDataLayer = L.geoJson(geojson, {
@@ -372,6 +410,10 @@ function plotaNoMapa(data){
             layer.eachLayer(function(child_layer){
                 child_layer.properties = feature.properties;
                 camadasEditaveis.addLayer(child_layer);
+                //bind click
+                child_layer.on('click', function (e) {
+                    mostraEdicao(child_layer);
+                });
             });
         }
         mapDataLayer = L.geoJson(geojson, {
@@ -392,6 +434,41 @@ function plotaNoMapa(data){
     camadasMapa.push(objetoCamada);
     
     refinaControlador();
+}
+
+function mostraEdicao(feature){
+    atributosGeometria = [];
+    for(prop in feature.properties.popup){
+        atributosGeometria.push(feature.properties.popup[prop]);
+    }
+    $("#setaAtributos").click();
+    $("#tituloModal").html(tabela);
+    $("#salvarGeometria").hide();
+    $("#editarGeometria").show();
+    var listaAtributos = document.getElementById("listaAtributos");
+    while (listaAtributos.firstChild) {
+        listaAtributos.removeChild(listaAtributos.firstChild);
+    }
+    for(var i = 0; i < campos.length; i++){
+        var campo = document.createElement("LI");
+        var valor = document.createTextNode(campos[i]+": ");
+        var input = document.createElement("INPUT");
+        input.setAttribute("type","text");
+        input.setAttribute("name","atributosGeometria");
+        input.setAttribute("value",atributosGeometria[i]);
+        input.setAttribute("maxlength","255");
+        campo.appendChild(valor);
+        campo.appendChild(input);
+        listaAtributos.appendChild(campo);
+    }
+    $("#editarGeometria").click(function(){
+        var geometrias = document.getElementsByName("atributosGeometria");
+        atributosGeometria = [];
+        for(var i = 0; i < geometrias.length; i++){
+            atributosGeometria.push(geometrias[i].value);
+        }
+        atualizaGeometria(feature);
+    });
 }
 
 function limpaDadosCamada(elemento){
