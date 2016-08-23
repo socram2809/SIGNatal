@@ -23,10 +23,13 @@ $campos = json_decode(stripslashes($_POST['campos']));
 //Cláusula WHERE
 $where = "object_id = $id";
 
-$fieldstr = "geom = ST_Transform(ST_SetSRID(ST_Multi(ST_GeomFromGeoJSON('$geom')),4674),31985) ";
+$fieldstr = "";
 
 for($i = 0; $i < count($valores) ; $i++) {
-    $fieldstr = $fieldstr.",$campos[$i] = '$valores[$i]' ";
+    $fieldstr = $fieldstr."$campos[$i] = '$valores[$i]'";
+    if($i != (count($valores)-1)){
+        $fieldstr = $fieldstr.", ";
+    }
 }
 
 //Cria SQL

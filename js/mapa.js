@@ -5,6 +5,7 @@ var drawControl;
 var tabela;
 var campos = new Array();
 var atributosGeometria = [];
+var edicaoGeometria;
 
 function atualizaCamadas(){
     camadasEditaveis.eachLayer(function(layer){
@@ -20,15 +21,13 @@ function atualizaCamadas(){
     });
 }
 
-function atualizaGeometria(layer){
-    var json = layer.toGeoJSON();
+function atualizaGeometria(){
     $.ajax("php/atualizaGeometriaCamada.php", {
             data: {
-                tabela: layer.properties.identificador,
-                id: layer.properties.id,
+                tabela: edicaoGeometria.properties.identificador,
+                id: edicaoGeometria.properties.id,
                 valores: JSON.stringify(atributosGeometria),
-                campos: JSON.stringify(campos),
-                geom: json.geometry
+                campos: JSON.stringify(campos)
             },
             type: "POST",
             success: function(){
@@ -378,6 +377,9 @@ function plotaNoMapa(data){
                 layer.on('click', function (e) {
                     mostraEdicao(layer);
                 });
+                layer.on('mouseover', function (e) {
+                    layer.openPopup();
+                });
             }
         }).addTo(map);
     }else if(isPoligono){
@@ -393,6 +395,9 @@ function plotaNoMapa(data){
                 //bind click
                 child_layer.on('click', function (e) {
                     mostraEdicao(child_layer);
+                });
+                child_layer.on('mouseover', function (e) {
+                    child_layer.openPopup();
                 });
             });
         }
@@ -413,6 +418,9 @@ function plotaNoMapa(data){
                 //bind click
                 child_layer.on('click', function (e) {
                     mostraEdicao(child_layer);
+                });
+                child_layer.on('mouseover', function (e) {
+                    child_layer.openPopup();
                 });
             });
         }
@@ -436,6 +444,14 @@ function plotaNoMapa(data){
     refinaControlador();
 }
 
+function edita(){
+    var geometrias = document.getElementsByName("atributosGeometria");
+    atributosGeometria = [];
+    for(var i = 0; i < geometrias.length; i++){
+        atributosGeometria.push(geometrias[i].value);
+    }
+    atualizaGeometria();
+}
 function mostraEdicao(feature){
     atributosGeometria = [];
     for(prop in feature.properties.popup){
@@ -461,14 +477,7 @@ function mostraEdicao(feature){
         campo.appendChild(input);
         listaAtributos.appendChild(campo);
     }
-    $("#editarGeometria").click(function(){
-        var geometrias = document.getElementsByName("atributosGeometria");
-        atributosGeometria = [];
-        for(var i = 0; i < geometrias.length; i++){
-            atributosGeometria.push(geometrias[i].value);
-        }
-        atualizaGeometria(feature);
-    });
+    edicaoGeometria = feature;
 }
 
 function limpaDadosCamada(elemento){
