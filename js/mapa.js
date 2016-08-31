@@ -213,6 +213,7 @@ function adicionarControladores(){
         }else{
             geometria = L.circleMarker(layer.getLatLng(), estilo);
         }
+        console.log(tabela);
         $.ajax("php/inserirDadosCamada.php", {
                 data: {
                         tabela: tabela,
@@ -221,6 +222,7 @@ function adicionarControladores(){
                 },
                 type: "POST"
         });
+        atributosGeometria = [];
         limpaDadosCamada(elemento);
         visualizaCamada(elemento);
     });
@@ -259,12 +261,6 @@ function adicionarControladores(){
             campo.appendChild(input);
             listaAtributos.appendChild(campo);
         }
-        $("#salvarGeometria").click(function(){
-            var geometrias = document.getElementsByName("atributosGeometria");
-            for(var i = 0; i < geometrias.length; i++){
-                atributosGeometria.push(geometrias[i].value);
-            }
-        });
     });
     
     $(".leaflet-draw-edit-edit").mousedown(function(){
@@ -442,6 +438,13 @@ function plotaNoMapa(data){
     camadasMapa.push(objetoCamada);
     
     refinaControlador();
+}
+
+function salva(){
+    var geometrias = document.getElementsByName("atributosGeometria");
+    for(var i = 0; i < geometrias.length; i++){
+        atributosGeometria.push(geometrias[i].value);
+    }
 }
 
 function edita(){

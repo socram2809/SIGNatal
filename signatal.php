@@ -160,7 +160,7 @@
           </ol>
       </div>
       <div class="modal-footer">
-        <button id="salvarGeometria" type="button" class="btn btn-default" data-dismiss="modal">Salvar</button>
+        <button id="salvarGeometria" onclick="salva();" type="button" class="btn btn-default" data-dismiss="modal">Salvar</button>
         <button id="editarGeometria" onclick="edita();" type="button" class="btn btn-default" data-dismiss="modal">Editar</button>
         <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
       </div>
