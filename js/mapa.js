@@ -213,7 +213,6 @@ function adicionarControladores(){
         }else{
             geometria = L.circleMarker(layer.getLatLng(), estilo);
         }
-        console.log(tabela);
         $.ajax("php/inserirDadosCamada.php", {
                 data: {
                         tabela: tabela,
