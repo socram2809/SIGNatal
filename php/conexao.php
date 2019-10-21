@@ -12,7 +12,7 @@ $host = 'localhost';
 $port = '5432';
 $dbname = 'multifinalitario';
 $user = 'postgres';
-$password = '!@#mar2809';
+$password = 'senha';
 
 $conn = pg_connect("host=$host port=$port dbname=$dbname user=$user password=$password");
 if (!$conn) {
